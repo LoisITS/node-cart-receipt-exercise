@@ -31,12 +31,7 @@ const getPercentageFromPromoCode = function (promoCodeName){
     }
     return 0;
     
-    
 }
-
-
-
-
 
 const formatProductName = (product) => {
     return product.toLowerCase().charAt(0).toUpperCase() + product.toLowerCase().slice(1)

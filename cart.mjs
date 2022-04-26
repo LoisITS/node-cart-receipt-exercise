@@ -22,10 +22,19 @@ for (let cartRow of carts) { //quale utente appartiene questo carrelo e quali pr
     let nomeProdotto = '';
     let prezzoProdotto ='';
     let rigaRicevuta = '';
-
-    console.log('\nUtente corrente', UUIDCorrente, '\n')
     let user = core.getUser(UUIDCorrente);
-    //console.log('User: ',user, '\n');
+
+    let nomeUtente = user.firstName + ' ' + user.lastName;
+    let disponibilitaUtente = user.wallet;
+    let promoUtente = user.promo;
+
+    let rate = core.getPercentageFromPromoCode(promoUtente);
+
+
+    console.log(" + ----------------------------------------------------- + ");
+
+    //console.log('\nUtente corrente', UUIDCorrente, '\n')
+    //Shop Name
     console.log(printShopName());
 
     const getDate = () => 
@@ -37,91 +46,72 @@ for (let cartRow of carts) { //quale utente appartiene questo carrelo e quali pr
 
     console.log(getDate());
     
-
-    let nomeUtente = user.firstName + ' ' + user.lastName;
-    let disponibilitaUtente = user.wallet;
-    let promoUtente = user.promo;
-
-    let rate = core.getPercentageFromPromoCode(promoUtente);
-
-
-
+    console.log(" * ----------------------------------------------------- * ");
+  
     if(prodottiUtente.lenght < 1){
         console.log(`${nomeUtente} NON HA PRODOTTI NEL CARRELLO.`)
     }
 
-
-    if(disponibilitaUtente > 0){
-        //console.log(`${nomeUtente}, ha il portafoglio pieno `)
-        console.log(" * ----------------------------------------------------- * ");
-        console.log('Utente si chiama',nomeUtente, '\n');
-        console.log('Utente ha disponibilità',disponibilitaUtente, 'Euro \n');
-        console.log(`${nomeUtente} ha ${rate} di sconto`)
-        console.log(" * ----------------------------------------------------- * ");
-
-    }else{
-        console.log(`${nomeUtente} ha il portafoglio VUOTO `)
-    }
-
-    console.log('Prodotti utente corrente',prodottiUtente, '\n')
-
-
     for(let item of prodottiUtente){
         let prodCorrente = core.getProduct(item);
         let ean = prodCorrente.ean;
-        let nomeProdotto = prodCorrente.name;
+        let nomeProdotto = core.formatProductName(prodCorrente.name);
         let prezzoProdotto = prodCorrente.price;
-        let rigaRicevuta = ` \t [${ean}] \t ${nomeProdotto} \t ${prezzoProdotto}`
+        
+        let rigaRicevuta = ` [${ean}] \t ${nomeProdotto} \t ${prezzoProdotto.toFixed(2)}`;
 
         console.log(rigaRicevuta,'\n')
         totaleOrdine += prezzoProdotto;
     }
 
-   /*
-    const sumCartItem = (list) => {
-        let total = 0;
-        if (list != null){
-            for (let codice of list) {
-                let prodotto = products.find(product => product.ean === codice);
-                total += prodotto.price;
-            }
-        }
-        return total.toFixed(2);
-    }
-
-    console.log(sumCartItem()); */
-    
     //print total
     console.log(" * ----------------------------------------------------- * ");
     totaleOrdine += prezzoProdotto
-    console.log (`\nTotal products: \t\t ${Number.parseFloat(totaleOrdine).toFixed(2)}`);
+    console.log (`\nTotal: \t\t\t\t ${Number.parseFloat(totaleOrdine).toFixed(2)}`);
     console.log(" + ----------------------------------------------------- + ");
 
-    //applied discount
+    //sconto
     let discount = core.getPercentageFromPromoCode(promoUtente)*totaleOrdine;
-    console.log(`\nDiscount: \t\t ${Number.parseFloat(discount).toFixed(2)}`);
+    console.log(`\nDiscount: \t\t\t\t\t ${Number.parseFloat(discount).toFixed(2)}`);
 
-    //updated total with discount
-    let totalDiscount = core.discountedPrice(totaleOrdine, rate);
-    console.log(`\n Total Discount: \t\t`,totalDiscount);
-    console.log(`\n PROMOCODE: \t\t `, promoUtente);
+    let discountedPriceValue = core.discountedPrice(totaleOrdine, rate);
+
+    if(promoUtente !== '' 
+    && promoUtente !== undefined
+    && promoUtente !== null) {
+     //updated total with discount
+     
+     console.log(`\nTotale Scontato:\t\t\t\t`,discountedPriceValue);
+
+     console.log(`\nPROMOCODE: \t\t\t\t\t ${promoUtente} \n`);
+ }
+
+  
     console.log(" + ----------------------------------------------------- + ");
-    console.log(" ** ----------------------------------------------------- ** ");
+    console.log("\n ** ----------------------------------------------------- ** \n ");
+
+    
+    let remain = disponibilitaUtente - discountedPriceValue
+    if (promoUtente !== ''
+    && promoUtente !== undefined
+    && promoUtente !== null)
+            if(disponibilitaUtente< discountedPriceValue){
+                console.log(`${nomeUtente} ha un credito insufficiente` )
+            }
+            else 
+                console.log(`${nomeUtente} ha un credito rimasto di ${Number.parseFloat(remain).toFixed(2)}`)
+        else{
+            if(disponibilitaUtente < totaleOrdine)
+            console.log(`${nomeUtente} ha un credito insufficiente`)
+
+            else
+                console.log(`${nomeUtente} ha un credito rimasto di ${Number.parseFloat(remain).toFixed(2)}`)
+        }
 
 
-    if(promoUtente === '' 
-       && promoUtente !== undefined
-       && promoUtente === null) {
-        console.log(`\n PROMO CODE: \t\t ${promoUtente}  `);
-        let discountedPrice = core.discountedPrice(totaleOrdine, rate);
-        console.log('discountPriceValue ',discountedPriceValue);
-    }
 
-    if(disponibilitaUtente < totaleOrdine){
-        console.log(` ${nomeUtente} NON HA ABBASTANZA SOLDI PER COMPRARE.`)
-    }
  
-   console.log(" ** ----------------------------------------------------- ** ");
+    console.log(" \n ** ----------------------------------------------------- ** \n\n ");
 
 
 
